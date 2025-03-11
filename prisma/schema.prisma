@@ -20,6 +20,8 @@ model Invoice {
   amount     Int
   status     String
   date       DateTime
+  customer    Customer @relation(fields: [customerId], references: [id])
+
 }
 
 model Customer {
@@ -27,6 +29,7 @@ model Customer {
   name     String
   email    String @unique 
   imageUrl String
+  invoices Invoice[] // Relation field
 }
 
 model Revenue {

@@ -1,26 +1,25 @@
-// import { db } from "@vercel/postgres";
+import { PrismaClient } from "@prisma/client";
 
-// const client = await db.connect();
+const prisma = new PrismaClient();
 
-// async function listInvoices() {
-// 	const data = await client.sql`
-//     SELECT invoices.amount, customers.name
-//     FROM invoices
-//     JOIN customers ON invoices.customer_id = customers.id
-//     WHERE invoices.amount = 666;
-//   `;
+async function listInvoices() {
+    const data = await prisma.invoice.findMany({
+        where: { amount: 666 }, // Filter for invoices with amount 666
+        select: {
+            amount: true,
+            customer: {
+                select: { name: true }, // Get the customer's name
+            },
+        },
+    });
 
-// 	return data.rows;
-// }
+    return data;
+}
 
 export async function GET() {
-  return Response.json({
-    message:
-      'Uncomment this file and remove this line. You can delete this file when you are finished.',
-  });
-  // try {
-  // 	return Response.json(await listInvoices());
-  // } catch (error) {
-  // 	return Response.json({ error }, { status: 500 });
-  // }
+    try {
+        return Response.json(await listInvoices());
+    } catch (error) {
+        return Response.json({ error }, { status: 500 });
+    }
 }
