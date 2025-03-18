@@ -8,6 +8,7 @@ import {
 } from "./definitions";
 import { formatCurrency } from "./utils";
 import { PrismaClient } from "@prisma/client";
+import { notFound } from "next/navigation";
 
 const prisma = new PrismaClient();
 
@@ -219,31 +220,35 @@ export async function fetchInvoicesPages(query: string) {
 }
 
 export async function fetchInvoiceById(id: string) {
-    try {
-        const invoice = await prisma.invoice.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                customerId: true,
-                amount: true,
-                status: true,
-            },
-        });
-
-        if (!invoice) {
-            throw new Error("Invoice not found");
-        }
-
-        return {
-            ...invoice,
-            amount: invoice.amount / 100, // Convert amount from cents to dollars
-        };
-    } catch (error) {
-        console.error("Database Error:", error);
-        throw new Error("Failed to fetch invoice.");
+    // Validate ID format before querying the database (if using MongoDB)
+    if (!isValidObjectId(id)) {
+        notFound(); // Redirect to Next.js not-found.tsx page
     }
-}
 
+    console.log("invoice[0]>> ", id);
+    const invoice = await prisma.invoice.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            customerId: true,
+            amount: true,
+            status: true,
+        },
+    });
+
+    if (!invoice) {
+        notFound();
+    }
+
+    return {
+        ...invoice,
+        amount: invoice.amount / 100, // Convert amount from cents to dollars
+    };
+}
+// ✅ Function to check if an ID is a valid MongoDB ObjectId
+function isValidObjectId(id: string) {
+    return /^[a-f\d]{24}$/i.test(id); // MongoDB ObjectId is a 24-character hex string
+}
 export async function fetchCustomers() {
     try {
         const customers = await prisma.customer.findMany({
